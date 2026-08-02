@@ -995,7 +995,7 @@ def get():
                 function initMonaco() {
                     if (typeof require !== 'undefined') {
                         require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs' } });
-                        require(['vs/editor/editor'], function () {
+                        require(['vs/editor/editor.main'], function () {
                             const container = document.getElementById('editor-container');
                             if (!container) return;
                             const fallbackVal = document.getElementById('fallback_code').value;
