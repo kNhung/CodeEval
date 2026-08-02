@@ -345,7 +345,7 @@ def get():
                         H1("CodeEval Agent", cls="text-xl md:text-2xl font-extrabold bg-gradient-to-r from-[#9E8AEC] via-[#8BD3DD] to-[#FFAAA6] bg-clip-text text-transparent"),
                         cls="flex items-center"
                     ),
-                    P("Hệ thống đa tác nhân chấm điểm và tạo phản hồi mã nguồn", cls="text-[10px] md:text-xs text-slate-400 mt-0.5 font-medium"),
+                    P("Hệ thống đa tác nhân chấm điểm mã nguồn", cls="text-[10px] md:text-xs text-slate-400 mt-0.5 font-medium"),
                     cls="flex-1 flex flex-col items-start justify-center"
                 ),
                 # Right side: Theme switch + Avatar + Settings
@@ -422,7 +422,7 @@ def get():
                                         Ul(
                                             Li(A("✨ Gemini-2.5-Flash", onclick="selectModel('openrouter|google/gemini-2.5-flash', '✨ Gemini-2.5-Flash')", cls="text-xs")),
                                             Li(A("🧠 Qwen-2.5-7B-Instruct", onclick="selectModel('openrouter|qwen/qwen-2.5-7b-instruct', '🧠 Qwen-2.5-7B-Instruct')", cls="text-xs")),
-                                            Li(A("🦙 Llama-3-8B-Instruct", onclick="selectModel('openrouter|meta-llama/llama-3-8b-instruct', '🦙 Llama-3-8B-Instruct')", cls="text-xs")),
+                                            Li(A("🦙 Llama-3.1-8B-Instruct", onclick="selectModel('openrouter|meta-llama/llama-3.1-8b-instruct', '🦙 Llama-3.1-8B-Instruct')", cls="text-xs")),
                                             Li(A("🛠️ Mock Model (Local Test)", onclick="selectModel('mock|mock-model', '🛠️ Mock Model (Local Test)')", cls="text-xs")),
                                             cls="dropdown-content z-20 menu p-1.5 bg-white dark:bg-[#1E293B] rounded-2xl w-full border border-slate-100 dark:border-white/5 mt-1 shadow-none"
                                         ),
@@ -1346,27 +1346,6 @@ def render_accordion_html(question_evals, language):
             </div>
             """
             
-        # Build suggestions list
-        suggestions_html = ""
-        q_suggs = q_res.get("suggestions", [])
-        if q_suggs:
-            suggs_items = "".join([f"<li class='text-[11px] list-disc list-inside text-slate-600 dark:text-slate-300 ml-1 py-0.5'>{s}</li>" for s in q_suggs])
-            suggestions_html = f"""
-            <div class="mt-3 pt-3 border-t border-black/[0.04] dark:border-white/[0.04]">
-                <span class="text-[10px] text-[#9E8AEC] font-bold uppercase tracking-wider block mb-1">💡 Đề Xuất & Gợi Ý Cải Thiện</span>
-                <ul class="space-y-0.5">
-                    {suggs_items}
-                </ul>
-            </div>
-            """
-        else:
-            suggestions_html = f"""
-            <div class="mt-3 pt-3 border-t border-black/[0.04] dark:border-white/[0.04]">
-                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">💡 Đề Xuất & Gợi Ý Cải Thiện</span>
-                <p class="text-[11px] italic text-slate-400">Không có đề xuất cải thiện.</p>
-            </div>
-            """
-            
         # Compile errors
         syntax_err_html = ""
         syntax_errs = q_res.get("syntax_errors", [])
@@ -1392,7 +1371,6 @@ def render_accordion_html(question_evals, language):
                     <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider block border-b border-black/[0.03] dark:border-white/[0.03] pb-1 mb-1">📊 Chi Tiết Tiêu Chí</span>
                     {factors_html}
                 </div>
-                {suggestions_html}
             </div>
         </div>
         """
@@ -1711,14 +1689,12 @@ async def evaluate_submission_core(
             factor_weights=f_weights,
             syntax_penalties=s_penalties,
         )
-        suggestions = assessor.generate_suggestions(factor_eval, syntax_errors_i)
         return {
             "question_index": idx,
             "question_name": q_text.splitlines()[0].strip() if q_text else f"Câu {idx}",
             "question_max": qmax,
             "factor_eval": factor_eval,
             "scoring": scoring,
-            "suggestions": suggestions,
             "syntax_errors": syntax_errors_i,
             "code_file": os.path.basename(code_files[idx - 1]) if (code_files and (idx - 1) < len(code_files)) else "student_code",
         }
@@ -1964,10 +1940,6 @@ async def run_evaluation_task(task_id: str, question_text: str, student_code: st
                         "Thao tác rút đĩa chính xác": {"compliance": 0.8, "reasoning": "Hàm rút đĩa đúng logic nhưng thiếu kiểm tra biên khi đĩa rỗng."},
                         "In kết quả đĩa theo thứ tự": {"compliance": 0.7, "reasoning": "In đĩa đúng thứ tự yêu cầu nhưng chưa format đẹp mắt."}
                     },
-                    "suggestions": [
-                        "Cần bổ sung điều kiện kiểm tra đĩa rỗng trước khi thực hiện rút đĩa.",
-                        "Format lại định dạng in kết quả đĩa cho đúng với đề bài yêu cầu."
-                    ],
                     "syntax_errors": [],
                     "code_file": "student_code.py"
                 },
@@ -1984,9 +1956,6 @@ async def run_evaluation_task(task_id: str, question_text: str, student_code: st
                         "Định nghĩa hàm tính tổng": {"compliance": 1.0, "reasoning": "Định nghĩa hàm đầy đủ tham số đầu vào và kiểu trả về."},
                         "Logic tính toán chính xác": {"compliance": 0.5, "reasoning": "Phép cộng bị lệch 1 đơn vị do sai số chỉ mục vòng lặp."}
                     },
-                    "suggestions": [
-                        "Sửa chỉ mục vòng lặp chạy từ 0 thay vì 1 để tránh bỏ sót phần tử đầu tiên."
-                    ],
                     "syntax_errors": [],
                     "code_file": "student_code.py"
                 },
@@ -2002,9 +1971,6 @@ async def run_evaluation_task(task_id: str, question_text: str, student_code: st
                     "factor_eval": {
                         "Định nghĩa cấu trúc dữ liệu": {"compliance": 0.0, "reasoning": "Không thể đánh giá do lỗi biên dịch."}
                     },
-                    "suggestions": [
-                        "Sửa lỗi biên dịch dòng 12: thiếu dấu chấm phẩy ';' ở cuối khai báo cấu trúc."
-                    ],
                     "syntax_errors": ["student_code.cpp:12:5: error: expected ';' after struct definition"],
                     "code_file": "student_code.cpp"
                 }
@@ -2205,13 +2171,11 @@ async def run_evaluation_task(task_id: str, question_text: str, student_code: st
                     factor_weights=f_weights,
                     syntax_penalties=s_penalties
                 )
-                suggestions = assessor.generate_suggestions(factor_eval, syntax_errors_i)
                 
                 return {
                     "question_index": idx,
                     "factor_eval": factor_eval,
                     "scoring": scoring,
-                    "suggestions": suggestions,
                     "syntax_errors": syntax_errors_i,
                     "question_max": qmax,
                     "code_file": os.path.basename(code_files[idx - 1]) if (code_files and (idx - 1) < len(code_files)) else "student_code",
@@ -2345,7 +2309,6 @@ async def run_evaluation_task(task_id: str, question_text: str, student_code: st
                     factor_weights=f_weights,
                     syntax_penalties=s_penalties
                 )
-                suggestions = assessor.generate_suggestions(factor_eval, all_syntax_errors)
                 
                 final_score = scoring.get("final_score_on_10", 0)
                 factor_score = scoring.get("factor_score_on_10", 0)
@@ -2356,7 +2319,6 @@ async def run_evaluation_task(task_id: str, question_text: str, student_code: st
                     "question_max": 10.0,
                     "scoring": scoring,
                     "factor_eval": factor_eval,
-                    "suggestions": suggestions,
                     "syntax_errors": all_syntax_errors,
                     "code_file": "student_code"
                 }]

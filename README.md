@@ -2,7 +2,7 @@
 
 **Credits.** CodeEval is adapted from **[CodeJudge](https://github.com/VichyTong/CodeJudge)** (Tong et al.), an LLM-based framework for evaluating generated code without test cases. This fork keeps the Apache 2.0 license and extends the original work with a **multi-agent grading pipeline**, real **compiler syntax checks**, and evaluation on **HCMUS** / **CoNaLa**. See the upstream repository and paper for the original CodeJudge method.
 
-Multi-agent auto-grading for programming assignments: **compiler syntax check** → **Agent 1 (factor extract)** → **Agent 2 (factor grade)** → score + suggestions.
+Multi-agent auto-grading for programming assignments: **compiler syntax check** → **Agent 1 (factor extract)** → **Agent 2 (factor grade)** → score.
 
 - Python package: `codeeval` (`from codeeval.core import MultiAgentAssessor`)
 - Conda environment: `codeeval`
@@ -12,7 +12,7 @@ Multi-agent auto-grading for programming assignments: **compiler syntax check** 
 1. **Compiler helper** — real syntax check (Python `compile`, C/C++ `g++ -fsyntax-only`, multi-file folders via temp dir).
 2. **Agent 1** — extract independent functional factors from the problem statement (LLM).
 3. **Agent 2** — grade each factor 0.0–1.0 (ignores syntax; scored separately).
-4. **Scoring** — convert to /10, apply syntax penalties, optionally scale to `question_max`; generate fix suggestions.
+4. **Scoring** — convert to /10, apply syntax penalties, optionally scale to `question_max`.
 
 ## Requirements
 

@@ -535,16 +535,6 @@ class MultiAgentAssessor:
                 syntax_penalties=syntax_penalties
             )
         
-        # Step 5: Generate suggestions
-        if llm_error:
-            suggestions = [f"Không thể tạo gợi ý do lỗi LLM: {error_msg}"]
-            if syntax_errors:
-                suggestions.append("Cần sửa đổi các lỗi cú pháp biên dịch sau:")
-                for err in syntax_errors:
-                    suggestions.append(f"- {err}")
-        else:
-            suggestions = self.generate_suggestions(factor_eval, syntax_errors)
-        
         # Combine everything into final JSON output
         result = {
             "assessment_type": "multi_agent",
@@ -552,7 +542,6 @@ class MultiAgentAssessor:
             "factors": factors,
             "factor_evaluation": factor_eval,
             "scoring": scoring_details,
-            "suggestions": suggestions,
             "usage": {
                 "input_tokens": total_input_tokens,
                 "output_tokens": total_output_tokens,
